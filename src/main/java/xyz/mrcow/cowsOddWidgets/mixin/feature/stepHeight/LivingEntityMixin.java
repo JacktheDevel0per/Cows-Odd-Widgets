@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import xyz.mrcow.cowsOddWidgets.config.Configs;
+import xyz.mrcow.cowsOddWidgets.config.FeatureToggle;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
@@ -19,7 +20,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     @ModifyExpressionValue(method = "getStepHeight", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
     private double wrapped(double original) {
-        if (Configs.Settings.STEP_MODE.getBooleanValue() && (!Configs.Settings.STEP_MODE_BLOCKED_BY_SNEAK.getBooleanValue() || this.isSneaking())) {
+        if (FeatureToggle.STEP_MODE.getBooleanValue() && (!FeatureToggle.STEP_MODE_BLOCKED_BY_SNEAK.getBooleanValue() || this.isSneaking())) {
             return original + 0.624;
         } else {
             return original;

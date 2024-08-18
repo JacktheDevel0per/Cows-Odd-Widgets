@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.mrcow.cowsOddWidgets.CowsOddWidgets;
 import xyz.mrcow.cowsOddWidgets.config.Configs;
+import xyz.mrcow.cowsOddWidgets.config.FeatureToggle;
 import xyz.mrcow.cowsOddWidgets.features.DisplayMobHealth;
 import xyz.mrcow.cowsOddWidgets.features.DisplayPetOwner;
 import xyz.mrcow.cowsOddWidgets.features.DisplayPlayerHealth;
@@ -58,7 +59,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
 
         EntityExtraInfo extraInfo = new EntityExtraInfo();
 
-        if (Configs.Settings.DISPLAY_PET_OWNER.getBooleanValue()) {
+        if (FeatureToggle.DISPLAY_PET_OWNER.getBooleanValue()) {
             List<UUID> ownerIds = DisplayPetOwner.getOwnerIds(entity);
 
             for (UUID ownerId : ownerIds) {
@@ -72,7 +73,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
             }
         }
 
-        if (Configs.Settings.DISPLAY_MOB_HEALTH.getBooleanValue() && entity instanceof MobEntity) {
+        if (FeatureToggle.DISPLAY_MOB_HEALTH.getBooleanValue() && entity instanceof MobEntity) {
             extraInfo.health = DisplayPlayerHealth.addHealthText((MobEntity)entity, Text.literal("").formatted(Formatting.RED));
         }
 
