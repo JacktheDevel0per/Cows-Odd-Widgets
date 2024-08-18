@@ -16,7 +16,7 @@ import xyz.mrcow.cowsOddWidgets.features.DisplayPlayerHealth;
 public abstract class EntityRendererMixin {
 
     @ModifyVariable(method = "renderLabelIfPresent", argsOnly = true, at = @At(value = "LOAD", ordinal = 0))
-    private Text renderLabelIfPresent(Text text, @Local Entity entity) {
+    private Text renderLabelIfPresent(Text text, @Local(argsOnly = true) Entity entity) {
         if(entity instanceof PlayerEntity && Configs.Settings.DISPLAY_PLAYER_HEALTH.getBooleanValue()){
             return  DisplayPlayerHealth.addHealthText((LivingEntity) entity, text);
         } else {
