@@ -1,5 +1,6 @@
 package xyz.mrcow.cowsOddWidgets.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -7,18 +8,21 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAttachmentType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import xyz.mrcow.cowsOddWidgets.CowsOddWidgets;
 import xyz.mrcow.cowsOddWidgets.config.Configs;
 import xyz.mrcow.cowsOddWidgets.features.DisplayMobHealth;
 import xyz.mrcow.cowsOddWidgets.features.DisplayPetOwner;
@@ -32,27 +36,17 @@ import java.util.UUID;
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin<T extends Entity> {
 
-
-    @Inject(at = {@At("HEAD")},
-    method = {"renderLabelIfPresent(Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"}
-    )
-    private void renderLabelIfPresent(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        if(entity instanceof PlayerEntity && Configs.Settings.DISPLAY_PLAYER_HEALTH.getBooleanValue()){
-            text = DisplayPlayerHealth.addHealthText((LivingEntity) entity, text);
-        }
-    }
-
-
-
     @Final
     @Shadow
     protected EntityRenderDispatcher dispatcher;
 
 
+    @Shadow public abstract TextRenderer getTextRenderer();
+
     //https://github.com/PotatoPresident/PetOwner/blob/master/src/main/java/us/potatoboy/petowner/mixin/OwnerNameTagRendering.java
-    @Inject(at = {@At("HEAD")},
-    method = {"render"})
-    private void render(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci){
+    @Inject(method = "render", at = @At("HEAD"))
+    private void renderEntityOwner(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci){
+
         //If HUD is hidden
         if (MinecraftClient.getInstance().options.hudHidden ||
                 //If the entity is not targeted
@@ -64,10 +58,10 @@ public abstract class EntityRendererMixin<T extends Entity> {
 
         EntityExtraInfo extraInfo = new EntityExtraInfo();
 
-        //If the feature is enabled
-        if (Configs.Settings.DISPLAY_PET_OWNER.getBooleanValue())
-        {
+        if (Configs.Settings.DISPLAY_PET_OWNER.getBooleanValue()) {
+            //Currently Always empty
             List<UUID> ownerIds = DisplayPetOwner.getOwnerIds(entity);
+
 
             for (UUID ownerId : ownerIds) {
                 if (ownerId == null) return;
@@ -80,17 +74,21 @@ public abstract class EntityRendererMixin<T extends Entity> {
             }
         }
 
-        if (Configs.Settings.DISPLAY_MOB_HEALTH.getBooleanValue() && entity instanceof MobEntity)
-        {
+        if (Configs.Settings.DISPLAY_MOB_HEALTH.getBooleanValue() && entity instanceof MobEntity) {
             extraInfo.health = DisplayPlayerHealth.addHealthText((MobEntity)entity, Text.literal("").formatted(Formatting.RED));
         }
 
-        if (!extraInfo.isEmpty())
-        {
+
+        CowsOddWidgets.LOGGER.info("health: {}", extraInfo.health);
+
+
+        if (!extraInfo.isEmpty()) {
+            CowsOddWidgets.LOGGER.info("should be rendering right now");
             renderExtras(entity, extraInfo, matrices, vertexConsumers, light);
         }
     }
 
+    @Unique
     private void renderExtras(T entity, EntityExtraInfo extras, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)
     {
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
@@ -135,22 +133,20 @@ public abstract class EntityRendererMixin<T extends Entity> {
         }
     }
 
-    private void renderExtraLabel(EntityRenderer entityRenderer, Text text, float y, float x, float height, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)
-    {
+    @Unique
+    private void renderExtraLabel(EntityRenderer entityRenderer, Text text, float y, float x, float height, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)  {
+
         matrices.push();
-        matrices.translate(0.0D, height, 0.0D);
+        matrices.translate(0.0, height, 0.0);
         matrices.multiply(this.dispatcher.getRotation());
-        matrices.scale(-0.025F, -0.025F, 0.025F);
-        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        matrices.scale(0.025F, -0.025F, 0.025F);
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        float f = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+        int j = (int) (f * 255.0F) << 24;
         TextRenderer textRenderer = entityRenderer.getTextRenderer();
-        float backgroundOpacity = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-        int backgroundColor = (int) (backgroundOpacity * 255.0F) << 24;
-
-
-
-        textRenderer.draw(text, x, y, text.getStyle().getColor().hashCode(), false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, backgroundColor, light);
-        textRenderer.draw(text, x, y, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
-
+        float g = (float) (-textRenderer.getWidth(text) / 2);
+        textRenderer.draw(text, g, 0, 553648127, false, matrix, vertexConsumers, TextRenderer.TextLayerType.SEE_THROUGH, j, light);
+        textRenderer.draw(text, g, 0, -1, false, matrix, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
         matrices.pop();
     }
 

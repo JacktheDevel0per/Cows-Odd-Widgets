@@ -25,11 +25,17 @@ public class DisplayPetOwner {
             .expireAfterWrite(6, TimeUnit.HOURS)
             .build(new CacheLoader<>() {
                 @Override
-                public Optional<String> load(UUID key) {
+                public @NotNull Optional<String> load(@NotNull UUID key) {
                     CompletableFuture.runAsync(() -> {
-                        GameProfile playerProfile = new GameProfile(key, null);
-                        playerProfile = MinecraftClient.getInstance().getSessionService().fillProfileProperties(playerProfile, false);
-                        usernameCache.put(key, Optional.ofNullable(playerProfile.getName()));
+                        GameProfile playerProfile = new GameProfile(key, "null");
+                        playerProfile = MinecraftClient.getInstance().getSessionService().fetchProfile(playerProfile.getId(), false).profile();
+                        if (playerProfile == null) {
+                            usernameCache.put(key, Optional.empty());
+                        } else {
+                            usernameCache.put(key, Optional.ofNullable(playerProfile.getName()));
+                        }
+
+
                     });
 
                     return Optional.of("Waiting...");
