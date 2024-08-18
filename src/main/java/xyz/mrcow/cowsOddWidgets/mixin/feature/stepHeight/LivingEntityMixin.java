@@ -8,7 +8,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import xyz.mrcow.cowsOddWidgets.config.Configs;
 import xyz.mrcow.cowsOddWidgets.config.FeatureToggle;
 
 @Mixin(LivingEntity.class)
