@@ -59,9 +59,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
         EntityExtraInfo extraInfo = new EntityExtraInfo();
 
         if (Configs.Settings.DISPLAY_PET_OWNER.getBooleanValue()) {
-            //Currently Always empty
             List<UUID> ownerIds = DisplayPetOwner.getOwnerIds(entity);
-
 
             for (UUID ownerId : ownerIds) {
                 if (ownerId == null) return;
@@ -78,12 +76,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
             extraInfo.health = DisplayPlayerHealth.addHealthText((MobEntity)entity, Text.literal("").formatted(Formatting.RED));
         }
 
-
-        CowsOddWidgets.LOGGER.info("health: {}", extraInfo.health);
-
-
         if (!extraInfo.isEmpty()) {
-            CowsOddWidgets.LOGGER.info("should be rendering right now");
             renderExtras(entity, extraInfo, matrices, vertexConsumers, light);
         }
     }
@@ -101,40 +94,29 @@ public abstract class EntityRendererMixin<T extends Entity> {
             {
                 for (int i = 0; i < extras.names.size(); i++)
                 {
-                    float height = entity.getHeight() + 0.5F;
-                    int y = 10 + (10 * i);
+                    float height = entity.getHeight() + 0.75F;
                     TextRenderer textRenderer = entityRenderer.getTextRenderer();
                     float textwidth = textRenderer.getWidth(extras.names.get(i));
                     if (textwidth > maxwidth)
                     {
                         maxwidth = textwidth;
                     }
-                    float x = -textwidth / 2;
 
-                    renderExtraLabel(entityRenderer, extras.names.get(i), y, x, height, matrices, vertexConsumers, light);
+                    renderExtraLabel(entityRenderer, extras.names.get(i), height, matrices, vertexConsumers, light);
                 }
             }
 
             if (!extras.healthEmpty())
             {
-                TextRenderer textRenderer = entityRenderer.getTextRenderer();
                 float height = entity.getHeight() + 0.5F;
-                int y = 10;
-                float textwidth = textRenderer.getWidth(extras.health);
-                float x = -(textwidth/2);
 
-                if (!extras.namesEmpty())
-                {
-                    y = y + (10 * extras.names.size()/2);
-                    x = maxwidth/2 + DisplayMobHealth.healthLabelOffset;
-                }
-                renderExtraLabel(entityRenderer, extras.health, y, x, height, matrices, vertexConsumers, light);
+                renderExtraLabel(entityRenderer, extras.health, height, matrices, vertexConsumers, light);
             }
         }
     }
 
     @Unique
-    private void renderExtraLabel(EntityRenderer entityRenderer, Text text, float y, float x, float height, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)  {
+    private void renderExtraLabel(EntityRenderer entityRenderer, Text text, float height, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light)  {
 
         matrices.push();
         matrices.translate(0.0, height, 0.0);

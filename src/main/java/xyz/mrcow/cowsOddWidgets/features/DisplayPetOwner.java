@@ -10,6 +10,7 @@ import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import org.jetbrains.annotations.NotNull;
+import xyz.mrcow.cowsOddWidgets.CowsOddWidgets;
 import xyz.mrcow.cowsOddWidgets.mixin.FoxEntityMixin;
 
 import java.util.*;
@@ -47,18 +48,12 @@ public class DisplayPetOwner {
     }
 
     public static List<UUID> getOwnerIds(Entity entity) {
-        if (entity instanceof TameableEntity tameableEntity) {
-
-            if (tameableEntity.isTamed()) {
+        if (entity instanceof TameableEntity tameableEntity && tameableEntity.isTamed()) {
                 return Collections.singletonList(tameableEntity.getOwnerUuid());
-            }
         }
 
-        if (entity instanceof HorseEntity horseEntity) {
-
-            if (horseEntity.isTame()) {
+        if (entity instanceof HorseEntity horseEntity && horseEntity.isTame()) {
                 return Collections.singletonList(horseEntity.getOwnerUuid());
-            }
         }
 
         if (entity instanceof FoxEntity foxEntity) {
